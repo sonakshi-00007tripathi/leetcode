@@ -1,0 +1,40 @@
+class Solution {
+public:
+    int minTimeToReach(vector<vector<int>>& moveTime) {
+        int n = moveTime.size(), m = moveTime[0].size();
+  
+        vector<vector<vector<int>>> visited(n, vector<vector<int>>(m, vector<int>(2, INT_MAX)));
+        using T = tuple<int, int, int, int>; // {time, x, y, parity}
+        priority_queue<T, vector<T>, greater<T>> pq;
+
+        pq.emplace(0, 0, 0, 0);  // Start at (0,0), time=0, even move
+
+        vector<pair<int, int>> dirs = {{0,1}, {1,0}, {0,-1}, {-1,0}};
+
+        while (!pq.empty()) {
+            auto [time, x, y, parity] = pq.top();
+            pq.pop();
+
+            if (visited[x][y][parity] <= time) continue;
+            visited[x][y][parity] = time;
+
+            if (x == n - 1 && y == m - 1) return time;
+
+            for (auto [dx, dy] : dirs) {
+                int nx = x + dx, ny = y + dy;
+                if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;
+
+                int waitTime = max(time, moveTime[nx][ny]);
+                int moveTimeCost = (parity == 0) ? 1 : 2;
+                int nextTime = waitTime + moveTimeCost;
+                int nextParity = 1 - parity;
+
+                if (nextTime < visited[nx][ny][nextParity]) {
+                    pq.emplace(nextTime, nx, ny, nextParity);
+                }
+            }
+        }
+
+        return -1;
+    }
+};
