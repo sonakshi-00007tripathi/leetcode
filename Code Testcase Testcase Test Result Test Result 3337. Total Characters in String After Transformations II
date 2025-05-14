@@ -1,0 +1,76 @@
+class Solution {
+    static final int MOD = 1_000_000_007;
+
+    public int lengthAfterTransformations(String s, int t, List<Integer> nums) {
+        int n = 26;
+        long[][] M = new long[n][n];
+
+        // Build transformation matrix M
+        for (int i = 0; i < 26; i++) {
+            int count = nums.get(i);
+            for (int j = 1; j <= count; j++) {
+                int nextChar = (i + j) % 26;
+                M[i][nextChar] = (M[i][nextChar] + 1) % MOD;
+            }
+        }
+
+        // Exponentiate the matrix to power t
+        long[][] Mt = matrixPower(M, t);
+
+        // Initial vector V0 (each char contributes 1)
+        long[] V0 = new long[26];
+        Arrays.fill(V0, 1);
+
+        // Multiply Mt * V0 → gives final length of each char after t steps
+        long[] Vt = multiplyMatrixVector(Mt, V0);
+
+        // Compute final string length
+        long total = 0;
+        for (char ch : s.toCharArray()) {
+            total = (total + Vt[ch - 'a']) % MOD;
+        }
+
+        return (int) total;
+    }
+
+    private long[][] matrixPower(long[][] mat, int power) {
+        int n = mat.length;
+        long[][] result = new long[n][n];
+        // Identity matrix
+        for (int i = 0; i < n; i++) result[i][i] = 1;
+
+        while (power > 0) {
+            if ((power & 1) == 1) {
+                result = multiplyMatrices(result, mat);
+            }
+            mat = multiplyMatrices(mat, mat);
+            power >>= 1;
+        }
+        return result;
+    }
+
+    private long[][] multiplyMatrices(long[][] A, long[][] B) {
+        int n = A.length;
+        long[][] C = new long[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int k = 0; k < n; k++) {
+                if (A[i][k] == 0) continue;
+                for (int j = 0; j < n; j++) {
+                    C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % MOD;
+                }
+            }
+        }
+        return C;
+    }
+
+    private long[] multiplyMatrixVector(long[][] mat, long[] vec) {
+        int n = vec.length;
+        long[] result = new long[n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                result[i] = (result[i] + mat[i][j] * vec[j]) % MOD;
+            }
+        }
+        return result;
+    }
+}
